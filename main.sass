@@ -1,0 +1,45 @@
+$colorApp: #141f34
+$colorWall: #50637f
+$colorDungeon: #faf7f3
+$colorFront: #C17526
+$colorHero: #31625b
+$colorEnemy: #c45565
+$colorBoss: #b92335
+$colorBonus: #fcd167
+
+$boardWidth: 1000px
+
+body
+  background-color: $colorApp
+  color: $colorFront
+
+  #container
+    margin: 0 auto
+    width: $boardWidth
+
+    h1
+      width: 400px
+      margin: 30px auto
+    #characteristics
+      list-style: none
+      font-family: Geneva, Arial, Helvetica, sans-serif
+      font-weight: bold
+      li
+        float: left
+        padding: 10px
+
+    .clear
+      clear: both
+
+    #board
+      width: $boardWidth
+      background-color: #fff
+      height: 400px
+      margin-top: 30px
+      position: relative
+      overflow: hidden
+
+      #dungeon
+        background-color: $colorWall
+        width: $boardWidth
+        height: 2000px
