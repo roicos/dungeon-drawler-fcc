@@ -18,7 +18,7 @@ body
     width: $boardWidth
 
     h1
-      width: 400px
+      width: 500px
       margin: 30px auto
     #characteristics
       list-style: none
@@ -43,3 +43,11 @@ body
         background-color: $colorWall
         width: $boardWidth
         height: 2000px
+
+        td
+          width: 10px
+          height: 10px
+          &.wall
+            background-color: $colorWall
+          &.room
+            background-color: $colorDungeon
