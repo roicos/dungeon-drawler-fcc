@@ -38,7 +38,7 @@ class Board extends React.Component {
     super(props);
 
     this.state = {
-      "board": this.createBoard(40, 40, 5) // 80, 200, 20
+      "board": this.createBoard(80, 30, 40) // 80, 100, 20
     }
   }
 
@@ -55,15 +55,14 @@ class Board extends React.Component {
     }
 
     function checkRoom(room, direction) {
-      if (room.begin.row - 2 < 0 || room.begin.col - 2 < 0 || room.end.row + 2 >= height || room.end.col + 2 >= width) {
-        return false;
-      }
       // dig
-      if (direction !== undefined) {  // todo: check 0
+      if (direction !== undefined) {
         switch (direction) {
           case 0: // up
+            if (room.begin.row - 2 < 0)
+              return false;
             for (var y = room.begin.row - 2; y <= room.begin.row - 1; y++) {
-              for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
+              for (var x = room.begin.col - 1; x <= room.end.col + 1; x++) {
                 if (board[y][x]) {
                   return false;
                 }
@@ -71,7 +70,9 @@ class Board extends React.Component {
             }
             return true;
           case 1: // left
-            for (var y = room.begin.row; y <= room.end.row; y++) {
+            if (room.begin.col - 2 < 0)
+              return false;
+            for (var y = room.begin.row - 1; y <= room.end.row + 1; y++) {
               for (var x = room.begin.col - 2; x <= room.begin.col - 1; x++) {
                 if (board[y][x]) {
                   return false;
@@ -80,7 +81,9 @@ class Board extends React.Component {
             }
             return true;
           case 2: // right
-            for (var y = room.begin.row; y <= room.end.row; y++) {
+            if (room.end.col + 2 >= width)
+              return false;
+            for (var y = room.begin.row - 1; y <= room.end.row + 1; y++) {
               for (var x = room.end.col + 1; x <= room.end.col + 2; x++) {
                 if (board[y][x]) {
                   return false;
@@ -89,8 +92,10 @@ class Board extends React.Component {
             }
             return true;
           case 3: // down
+            if (room.end.row + 2 >= height)
+              return false;
             for (var y = room.end.row + 1; y <= room.end.row + 2; y++) {
-              for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
+              for (var x = room.begin.col - 1; x <= room.end.col + 1; x++) {
                 if (board[y][x]) {
                   return false;
                 }
@@ -100,6 +105,9 @@ class Board extends React.Component {
         }
       } else {
         // initial
+        if (room.begin.row - 2 < 0 || room.begin.col - 2 < 0 || room.end.row + 2 >= height || room.end.col + 2 >= width) {
+          return false;
+        }
         for (var y = room.begin.row - 2; y <= room.end.row + 2; y++) {
           for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
             if (board[y][x]) {
@@ -121,7 +129,6 @@ class Board extends React.Component {
 
     function getDirectionAvalable(room) {
       var direction = Math.floor(Math.random() * 4); // 0 - up, 1 - left, 2 - right, 3 - down
-      console.log(direction);
       for (var i = 0; i < 4; i++) {
         if (checkRoom(room, direction)) {
           return direction;
@@ -159,7 +166,7 @@ class Board extends React.Component {
           },
           "completed": false
         };
-        check = checkRoom(room, false);
+        check = checkRoom(room);
       }
       rooms.push(room);
       for (var i = room.begin.row; i <= room.end.row; i++) {
@@ -174,25 +181,23 @@ class Board extends React.Component {
       for (var i = 0; i < rooms.length; i++) {
         if (!rooms[i].completed) {
           var direction = getDirectionAvalable(rooms[i]);
-          console.log("dig room: " + i);
-          console.log(direction);
           if (direction == null) {
             rooms[i].completed = true;
           } else {
             switch (direction) {
-              case 0:
+              case 0: // up
                 rooms[i].begin.row--;
                 for (var j = rooms[i].begin.col; j <= rooms[i].end.col; j++) {
                   board[rooms[i].begin.row][j] = 1;
                 }
                 break;
               case 1:
-                rooms[i].begin.col--;
+                rooms[i].begin.col--; // left
                 for (var j = rooms[i].begin.row; j <= rooms[i].end.row; j++) {
                   board[j][rooms[i].begin.col] = 1;
                 }
                 break;
-              case 2:
+              case 2: // right
                 rooms[i].end.col++;
                 for (var j = rooms[i].begin.row; j <= rooms[i].end.row; j++) {
                   board[j][rooms[i].end.col] = 1;
@@ -209,7 +214,6 @@ class Board extends React.Component {
         }
       }
     }
-    console.log(rooms);
     // dig corridors
     return board;
   }
