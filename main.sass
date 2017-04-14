@@ -7,7 +7,10 @@ $colorEnemy: #c45565
 $colorBoss: #b92335
 $colorBonus: #fcd167
 
+$width: 80
+$heigth: 200
 $boardWidth: 1000px
+$cellWidth: $boardWidth/$width
 
 body
   background-color: $colorApp
@@ -42,12 +45,19 @@ body
       #dungeon
         background-color: $colorWall
         width: $boardWidth
-        height: 2000px
+        height: $heigth*$cellWidth
 
-        td
-          width: 10px
-          height: 10px
-          &.wall
-            background-color: $colorWall
-          &.room
-            background-color: $colorDungeon
+        table
+          border-collapse:collapse
+          border-spacing: 0
+          border-width: 0
+
+          td
+            width: $cellWidth
+            height: $cellWidth
+            padding: 0
+            border-collapse:collapse
+            &.wall
+              background-color: $colorWall
+            &.room
+              background-color: $colorDungeon

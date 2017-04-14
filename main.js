@@ -38,7 +38,7 @@ class Board extends React.Component {
     super(props);
 
     this.state = {
-      "board": this.createBoard(80, 200, 15)
+      "board": this.createBoard(40, 40, 5) // 80, 200, 20
     }
   }
 
@@ -54,41 +54,52 @@ class Board extends React.Component {
       board.push(row);
     }
 
-    function checkRoom(room, bordersOnly) {
+    function checkRoom(room, direction) {
       if (room.begin.row - 2 < 0 || room.begin.col - 2 < 0 || room.end.row + 2 >= height || room.end.col + 2 >= width) {
         return false;
       }
-
-      if (bordersOnly) {
-        for (var y = room.begin.row - 2; y <= room.end.row - 1; y++) {
-          for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
-            if (board[y][x]) {
-              return false;
+      // dig
+      if (direction !== undefined) {  // todo: check 0
+        switch (direction) {
+          case 0: // up
+            for (var y = room.begin.row - 2; y <= room.begin.row - 1; y++) {
+              for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
+                if (board[y][x]) {
+                  return false;
+                }
+              }
             }
-          }
-        }
-
-        for (var y = room.begin.row; y <= room.end.row; y++) {
-          for (var x = room.begin.col - 2; x <= room.end.col - 1; x++) {
-            if (board[y][x]) {
-              return false;
+            return true;
+          case 1: // left
+            for (var y = room.begin.row; y <= room.end.row; y++) {
+              for (var x = room.begin.col - 2; x <= room.begin.col - 1; x++) {
+                if (board[y][x]) {
+                  return false;
+                }
+              }
             }
-          }
-          for (var x = room.begin.col + 1; x <= room.end.col + 2; x++) {
-            if (board[y][x]) {
-              return false;
+            return true;
+          case 2: // right
+            for (var y = room.begin.row; y <= room.end.row; y++) {
+              for (var x = room.end.col + 1; x <= room.end.col + 2; x++) {
+                if (board[y][x]) {
+                  return false;
+                }
+              }
             }
-          }
-        }
-
-        for (var y = room.begin.row + 1; y <= room.end.row + 2; y++) {
-          for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
-            if (board[y][x]) {
-              return false;
+            return true;
+          case 3: // down
+            for (var y = room.end.row + 1; y <= room.end.row + 2; y++) {
+              for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
+                if (board[y][x]) {
+                  return false;
+                }
+              }
             }
-          }
+            return true;
         }
       } else {
+        // initial
         for (var y = room.begin.row - 2; y <= room.end.row + 2; y++) {
           for (var x = room.begin.col - 2; x <= room.end.col + 2; x++) {
             if (board[y][x]) {
@@ -96,13 +107,34 @@ class Board extends React.Component {
             }
           }
         }
+        return true;
       }
-      return true;
+    }
+
+    function getNextDirection(current) {
+      if (current == 3) {
+        return 0;
+      } else {
+        return ++current;
+      }
+    }
+
+    function getDirectionAvalable(room) {
+      var direction = Math.floor(Math.random() * 4); // 0 - up, 1 - left, 2 - right, 3 - down
+      console.log(direction);
+      for (var i = 0; i < 4; i++) {
+        if (checkRoom(room, direction)) {
+          return direction;
+        } else {
+          direction = getNextDirection(direction);
+        }
+      }
+      return null; // no available directions
     }
 
     function areRoomsCompleted(rooms) {
       for (var i = 0; i < rooms.length; i++) {
-        if (rooms[i].completed) {
+        if (!rooms[i].completed) {
           return false;
         }
       }
@@ -138,29 +170,47 @@ class Board extends React.Component {
     }
 
     // dig rooms
-    //  while (!areRoomsCompleted(rooms)){
-    for (var i = 0; i < rooms.length; i++) {
-      if (!rooms[i].completed && checkRoom(rooms[i], true)) {
-        var direction = Math.floor(Math.random());
-        if (direction) { // vertical
-          for (var j = room.begin.col; j <= room.end.col; j++) {
-            board[room.begin.row - 1][j] = 1;
-            board[room.end.row + 1][j] = 1;
-          }
-        } else { // horizontal
-          for (var j = room.begin.row; j <= room.end.row; j++) {
-            board[j][room.begin.col - 1] = 1;
-            board[j][room.end.col + 1] = 1;
+    while (!areRoomsCompleted(rooms)) {
+      for (var i = 0; i < rooms.length; i++) {
+        if (!rooms[i].completed) {
+          var direction = getDirectionAvalable(rooms[i]);
+          console.log("dig room: " + i);
+          console.log(direction);
+          if (direction == null) {
+            rooms[i].completed = true;
+          } else {
+            switch (direction) {
+              case 0:
+                rooms[i].begin.row--;
+                for (var j = rooms[i].begin.col; j <= rooms[i].end.col; j++) {
+                  board[rooms[i].begin.row][j] = 1;
+                }
+                break;
+              case 1:
+                rooms[i].begin.col--;
+                for (var j = rooms[i].begin.row; j <= rooms[i].end.row; j++) {
+                  board[j][rooms[i].begin.col] = 1;
+                }
+                break;
+              case 2:
+                rooms[i].end.col++;
+                for (var j = rooms[i].begin.row; j <= rooms[i].end.row; j++) {
+                  board[j][rooms[i].end.col] = 1;
+                }
+                break;
+              case 3:
+                rooms[i].end.row++;
+                for (var j = rooms[i].begin.col; j <= rooms[i].end.col; j++) {
+                  board[rooms[i].end.row][j] = 1;
+                }
+                break;
+            }
           }
         }
-      } else {
-        rooms[i].completed = true;
       }
     }
-    //  }
-
+    console.log(rooms);
     // dig corridors
-
     return board;
   }
 
