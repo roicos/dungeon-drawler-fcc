@@ -1,2 +1,2 @@
 # roguelik-dungeon-drawler-fcc
-# See showcase <a href="http://codepen.io/roicos/pen/ZeNbNJ">here</a>
+See <a href="http://codepen.io/roicos/full/ZeNbNJ/" target="_blank">showcase</a>
