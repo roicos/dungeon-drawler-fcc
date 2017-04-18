@@ -38,22 +38,14 @@ class Board extends React.Component {
     super(props);
 
     this.state = {
-      "board": this.createBoard(80, 30, 40) // 80, 100, 20
+      "board": this.createBoard(80, 80, 40) // 80, 80, 40
     }
   }
 
   createBoard(width, height, roomsNum) { // 0-wall, 1-dungeon
     var board = [];
 
-    // create walls
-    for (var i = 0; i < height; i++) {
-      var row = [];
-      for (var j = 0; j < width; j++) {
-        row.push(0);
-      }
-      board.push(row);
-    }
-
+    // helpers
     function checkGerm(germ) {
       if (germ.begin.row - 2 < 0 || germ.begin.col - 2 < 0 || germ.end.row + 2 >= height || germ.end.col + 2 >= width) {
         return false;
@@ -147,6 +139,9 @@ class Board extends React.Component {
     }
 
     function checkWall(start, direction) {
+      if (start.row - 2 < 0 || start.row + 2 >= height || start.col - 2 < 0 || start.col + 2 >= width) {
+        return 0;
+      }
       switch (direction) {
         case 0:
           return board[start.row - 2][start.col] && !board[start.row - 1][start.col] && (!board[start.row - 1][start.col - 1] || !board[start.row - 1][start.col + 1]);
@@ -161,7 +156,7 @@ class Board extends React.Component {
 
     function getRoomIndex(rooms, row, col) {
       for (var i = 0; i < rooms.length; i++) {
-        if (rooms[i].begin.row < row < rooms[i].end.row && rooms[i].begin.col < col < rooms[i].end.col) {
+        if (rooms[i].begin.row <= row && row <= rooms[i].end.row && rooms[i].begin.col <= col && col <= rooms[i].end.col) {
           return i;
         }
       }
@@ -170,7 +165,7 @@ class Board extends React.Component {
 
     function deleteUnavailable(rooms) {
       var result = [];
-      for (var i = 0; i <= rooms.length; i++) {
+      for (var i = 0; i < rooms.length; i++) {
         if (!rooms[i].available) {
           for (var y = rooms[i].begin.row; y <= rooms[i].end.row; y++) {
             for (var x = rooms[i].begin.col; x <= rooms[i].end.col; x++) {
@@ -184,7 +179,16 @@ class Board extends React.Component {
       return result;
     }
 
-    // initiate rooms
+    // create walls
+    for (var i = 0; i < height; i++) {
+      var row = [];
+      for (var j = 0; j < width; j++) {
+        row.push(0);
+      }
+      board.push(row);
+    }
+
+    // initiate rooms (germs)
     var rooms = [];
     for (var num = 0; num < roomsNum; num++) {
       var check = false;
@@ -240,7 +244,7 @@ class Board extends React.Component {
                   board[j][rooms[i].end.col] = 1;
                 }
                 break;
-              case 3:
+              case 3: // down
                 rooms[i].end.row++;
                 for (var j = rooms[i].begin.col; j <= rooms[i].end.col; j++) {
                   board[rooms[i].end.row][j] = 1;
@@ -251,7 +255,59 @@ class Board extends React.Component {
         }
       }
     }
+
     // dig corridors
+    var available = Math.floor(Math.random() * (rooms.length - 1));
+    for (var counter = 0; counter < Math.floor(rooms.length * 2); counter++) {
+      rooms[available].available = true;
+      var direction;
+      var start = {};
+      var index;
+      do {
+        direction = Math.floor(Math.random() * 4); // 0 - up, 1 - left, 2 - right, 3 - down
+        switch (direction) {
+          case 0:
+            start.row = rooms[available].begin.row;
+            start.col = Math.floor(Math.random() * (rooms[available].end.col - rooms[available].begin.col)) + rooms[available].begin.col;
+            break;
+          case 1:
+            start.row = Math.floor(Math.random() * (rooms[available].end.row - rooms[available].begin.row)) + rooms[available].begin.row;
+            start.col = rooms[available].begin.col;
+            break;
+          case 2:
+            start.row = Math.floor(Math.random() * (rooms[available].end.row - rooms[available].begin.row)) + rooms[available].begin.row;
+            start.col = rooms[available].end.col;
+            break;
+          case 3:
+            start.row = rooms[available].end.row;
+            start.col = Math.floor(Math.random() * (rooms[available].end.col - rooms[available].begin.col)) + rooms[available].begin.col;
+            break;
+        }
+      } while (!checkWall(start, direction));
+
+      switch (direction) {
+        case 0:
+          board[start.row - 1][start.col] = 1;
+          index = getRoomIndex(rooms, start.row - 2, start.col);
+          break;
+        case 1:
+          board[start.row][start.col - 1] = 1;
+          index = getRoomIndex(rooms, start.row, start.col - 2);
+          break;
+        case 2:
+          board[start.row][start.col + 1] = 1;
+          index = getRoomIndex(rooms, start.row, start.col + 2);
+          break;
+        case 3:
+          board[start.row + 1][start.col] = 1;
+          index = getRoomIndex(rooms, start.row + 2, start.col);
+          break;
+      }
+      available = index > -1 ? index : available;
+    }
+
+    rooms = deleteUnavailable(rooms);
+
     return board;
   }
 
