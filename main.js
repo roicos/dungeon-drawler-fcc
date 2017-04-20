@@ -38,11 +38,11 @@ class Board extends React.Component {
     super(props);
 
     this.state = {
-      "board": this.createBoard(80, 80, 40) // 80, 80, 40
+      "dungeon": this.createDungeon(80, 80, 40) // 80, 80, 40
     }
   }
 
-  createBoard(width, height, roomsNum) { // 0-wall, 1-dungeon
+  createDungeon(width, height, roomsNum) { // 0-wall, 1-dungeon
     var board = [];
 
     // helpers
@@ -313,19 +313,36 @@ class Board extends React.Component {
 
   render() {
 
+    return (
+      <div id="board">
+         <Dungeon data={this.state.dungeon}/>
+         <Objects board={this.state.dungeon}/>
+      </div>
+    );
+  }
+}
+
+class Dungeon extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  shouldComponentUpdate() {
+    return false;
+  }
+
+  render() {
     var trs = [];
-    for (var i = 0; i < this.state.board.length; i++) {
-      trs.push(<Tr key={i} index={i} data={this.state.board[i]}/>);
+    for (var i = 0; i < this.props.data.length; i++) {
+      trs.push(<Tr key={i} index={i} data={this.props.data[i]}/>);
     }
 
     return (
-      <div id="board">
-          <div id="dungeon">
-            <table>
-              <tbody>{trs}</tbody>
-            </table>
-          </div>
-        </div>
+      <div id="dungeon">
+        <table>
+          <tbody>{trs}</tbody>
+        </table>
+      </div>
     );
   }
 }
@@ -343,6 +360,150 @@ class Tr extends React.Component {
 
     return (
       <tr>{tds}</tr>
+    );
+  }
+}
+
+class Objects extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      "dungeon": 1,
+      "objects": this.placeObjects(this.createObjects(1))
+    }
+
+    this.placeObjects = this.placeObjects.bind(this);
+  }
+
+  createObjects(dungeon) {
+    var settings = {};
+    var objects = [];
+
+    switch (dungeon) {
+      case 1:
+        settings.enemies = 20;
+        settings.healthBonuses = 25;
+        settings.weaporn = [2, 2, 2, 3, 3, 3, 4, 4];
+        settings.enemyLevelMax = 10;
+        settings.bossLevel = 15;
+        settings.bossStrength = 300;
+        break;
+    }
+
+    function createEnemy() {
+      var enemy = {};
+      enemy.type = "enemy";
+      enemy.level = Math.floor(Math.random() * settings.enemyLevelMax) + 1;
+      enemy.damage = enemy.level == 5 ? 1 : enemy.level + 5;
+      enemy.strength = enemy.level * (Math.floor(Math.random() * 11) + 10) + 30;
+      enemy.xp = enemy.level * 2;
+      return enemy;
+    }
+
+    function createBoss() {
+      var boss = {};
+      boss.type = "boss";
+      boss.level = settings.bossLevel;
+      boss.damage = boss.level + 5;
+      boss.strength = settings.bossStrength;
+      boss.xp = 50;
+      return boss;
+    }
+
+    function createWeaporn(attack) {
+      var weaporn = {};
+      weaporn.type = "weaporn";
+      weaporn.attack = attack;
+      switch (attack) {
+        case 1:
+          weaporn.name = "stick";
+          break;
+        case 2:
+          weaporn.name = "bit";
+          break;
+        case 3:
+          weaporn.name = "knife";
+          break;
+        case 4:
+          weaporn.name = "spear";
+          break;
+        case 5:
+          weaporn.name = "handgun";
+          break;
+        case 6:
+          weaporn.name = "machine gun";
+          break;
+        case 7:
+          weaporn.name = "grenade launcher";
+          break;
+        case 8:
+          weaporn.name = "bomb";
+          break;
+      }
+      return weaporn;
+    }
+
+    function createHealthBonus() {
+      var bonus = {};
+      bonus.type = "health";
+      bonus.heal = Math.floor(Math.random() * 101) + 50;
+      return bonus;
+    }
+
+    objects.push(createBoss());
+    for (var i = 0; i < settings.enemies; i++) {
+      objects.push(createEnemy());
+    }
+    for (var i = 0; i < settings.weaporn.length; i++) {
+      objects.push(createWeaporn(settings.weaporn[i]));
+    }
+    for (var i = 0; i < settings.healthBonuses; i++) {
+      objects.push(createHealthBonus());
+    }
+
+    return objects;
+  }
+
+  placeObjects(objects) {
+
+    function isOccupied(row, col) {
+      for (var i = 0; i < objects.length; i++) {
+        if (objects[i].position != undefined && objects[i].position.row == row && objects[i].position.col == col) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function getFreePosition() {
+      var check = false;
+      var row;
+      var col;
+      while (!check) {
+        row = Math.floor(Math.random() * this.props.board.length);
+        col = Math.floor(Math.random() * this.props.board[0].length);
+        check = this.props.board[row][col] && !isOccupied(row, col);
+      }
+      return {
+        "row": row,
+        "col": col
+      };
+    }
+
+    for (var i = 0; i < objects.length; i++) {
+      var position = getFreePosition.call(this);
+      objects[i].position = position;
+    }
+    console.log(objects);
+    return objects;
+  }
+
+  render() {
+
+    return (
+      <div id="objects">
+      </div>
     );
   }
 }
