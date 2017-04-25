@@ -1,13 +1,29 @@
 class Game extends React.Component {
   constructor() {
     super();
+
+    this.state = {
+      "health": 100,
+      "weaporn": 1,
+      "level": 1,
+      "xp": 100,
+      "dungeon": 1
+    }
+
+    this.updateState = this.updateState.bind(this);
+  }
+
+  updateState(name, value) {
+    this.setState({
+      name: value
+    });
   }
 
   render() {
     return (
       <div id="app">
-        <Сharacteristics/>
-        <Board/>
+        <Сharacteristics health={this.state.health} weaporn={this.state.weaporn} level={this.state.level} xp={this.state.xp} dungeon={this.state.dungeon}/>
+        <Board health={this.state.health} weaporn={this.state.weaporn} level={this.state.level} xp={this.state.xp} dungeon={this.state.dungeon} updateState={this.updateState}/>
       </div>
     );
   }
@@ -16,17 +32,52 @@ class Game extends React.Component {
 class Сharacteristics extends React.Component {
   constructor() {
     super();
+
+    this.getWeapornName = this.getWeapornName.bind(this);
+  }
+
+  getWeapornName(weaporn) {
+    var name;
+    switch (weaporn) {
+      case 1:
+        name = "stick";
+        break;
+      case 2:
+        name = "bit";
+        break;
+      case 3:
+        name = "knife";
+        break;
+      case 4:
+        name = "spear";
+        break;
+      case 5:
+        name = "handgun";
+        break;
+      case 6:
+        name = "machine gun";
+        break;
+      case 7:
+        name = "grenade launcher";
+        break;
+      case 8:
+        name = "bomb";
+        break;
+      default:
+        name = "stick";
+    }
+    return name;
   }
 
   render() {
     return (<div>
         <ul id="characteristics">
-          <li><span className="key">Health</span> : <span className="value">100</span></li>
-          <li><span className="key">Weapon</span> : <span className="value">stick</span></li>
-          <li><span className="key">Attack</span> : <span className="value">7</span></li>
-          <li><span className="key">Level</span> : <span className="value">0</span></li>
-          <li><span className="key">Nextlevel</span> : <span className="value">100 XP</span></li>
-          <li><span className="key">Dungeon</span> : <span className="value">1</span></li>
+          <li><span className="key">Health</span> : <span className="value">{this.props.health}</span></li>
+          <li><span className="key">Weapon</span> : <span className="value">{this.getWeapornName(this.props.weaporn)}</span></li>
+          <li><span className="key">Attack</span> : <span className="value">{(this.props.level+5)*this.props.weaporn}</span></li>
+          <li><span className="key">Level</span> : <span className="value">{this.props.level}</span></li>
+          <li><span className="key">Nextlevel</span> : <span className="value">{this.props.xp + " XP"}</span></li>
+          <li><span className="key">Dungeon</span> : <span className="value">{this.props.dungeon}</span></li>
         </ul>
         <div className="clear"></div>
      </div>);
@@ -313,10 +364,10 @@ class Board extends React.Component {
 
   render() {
 
-    return (
+    return ( // board - static dungeon board, dungeon - dungeon level
       <div id="board">
          <Dungeon data={this.state.dungeon}/>
-         <Objects board={this.state.dungeon}/>
+         <Objects health={this.props.health} weaporn={this.props.weaporn} level={this.props.level} xp={this.props.xp} board={this.state.dungeon} dungeon={this.props.dungeon} updateState={this.props.updateState}/>
       </div>
     );
   }
@@ -364,19 +415,19 @@ class Tr extends React.Component {
   }
 }
 
-class Objects extends React.Component {
+class Objects extends React.Component { // all objects and game setting
   constructor(props) {
     super(props);
 
     this.state = {
-      "dungeon": 1,
-      "objects": this.placeObjects(this.createObjects(1))
+      "objects": this.placeObjects(this.createObjects(this.props.dungeon))
     }
 
     this.placeObjects = this.placeObjects.bind(this);
+    this.checkNext = this.checkNext.bind(this);
   }
 
-  createObjects(dungeon) {
+  createObjects(dungeon) { // dungeon level
     var settings = {};
     var objects = [];
 
@@ -386,8 +437,7 @@ class Objects extends React.Component {
         settings.healthBonuses = 25;
         settings.weaporn = [2, 2, 2, 3, 3, 3, 4, 4];
         settings.enemyLevelMax = 10;
-        settings.bossLevel = 15;
-        settings.bossStrength = 300;
+        settings.bossLevel = 20;
         break;
     }
 
@@ -395,8 +445,7 @@ class Objects extends React.Component {
       var enemy = {};
       enemy.type = "enemy";
       enemy.level = Math.floor(Math.random() * settings.enemyLevelMax) + 1;
-      enemy.damage = enemy.level == 5 ? 1 : enemy.level + 5;
-      enemy.strength = enemy.level * (Math.floor(Math.random() * 11) + 10) + 30;
+      enemy.health = enemy.level * (Math.floor(Math.random() * 11) + 10) + 30;
       enemy.xp = enemy.level * 2;
       return enemy;
     }
@@ -406,7 +455,7 @@ class Objects extends React.Component {
       boss.type = "boss";
       boss.level = settings.bossLevel;
       boss.damage = boss.level + 5;
-      boss.strength = settings.bossStrength;
+      boss.health = boss.level * 100;
       boss.xp = 50;
       return boss;
     }
@@ -415,32 +464,6 @@ class Objects extends React.Component {
       var weaporn = {};
       weaporn.type = "weaporn";
       weaporn.attack = attack;
-      switch (attack) {
-        case 1:
-          weaporn.name = "stick";
-          break;
-        case 2:
-          weaporn.name = "bit";
-          break;
-        case 3:
-          weaporn.name = "knife";
-          break;
-        case 4:
-          weaporn.name = "spear";
-          break;
-        case 5:
-          weaporn.name = "handgun";
-          break;
-        case 6:
-          weaporn.name = "machine gun";
-          break;
-        case 7:
-          weaporn.name = "grenade launcher";
-          break;
-        case 8:
-          weaporn.name = "bomb";
-          break;
-      }
       return weaporn;
     }
 
@@ -495,16 +518,169 @@ class Objects extends React.Component {
       var position = getFreePosition.call(this);
       objects[i].position = position;
     }
-    console.log(objects);
+    // console.log(objects);
     return objects;
   }
 
+  checkNext(pos) { // TODO: think up what to return (we need index) and where to check the action
+    if (!this.props.board[pos.row][pos.col]) {
+      return "wall";
+    }
+    var objects = this.state.objects;
+    for (var i = 0; i < objects.length; i++) {
+      if (objects[i].position.row == pos.row && objects[i].position.col == pos.col) {
+        return objects[i].type;
+      }
+    }
+    return "empty";
+  }
+
+  fightEnemy(index) {
+    var heroHealth = this.props.health - this.state.objects[index].level + 5;
+    var enemyHealth = this.state.objects[index].health - (this.props.level + 5) * this.props.weaporn;
+    // check hero health
+    // hero can lose the game
+
+    // check enemy health
+    // delete enemy and won hero if necessary (if enemy is boss, win and go to next dungeon)
+
+  }
+
+  getBonus(index) {
+    var health = this.props.health;
+    health += this.state.objects[index].heal;
+    // TODO: delete object
+    this.updateState({
+      "health": health
+    });
+  }
+
+  changeWeaporn(index) {
+    if (this.props.weaporn < this.state.objects[index].attack) {
+      this.updateState({
+        "weaporn": this.state.objects[index].attack
+      });
+    }
+    // TODO: delete object
+  }
+
+  nextLevel() {
+    this.updateState({
+      "level": ++this.props.level
+    });
+  }
+
+  nextDungeon() {
+    this.updateState({
+      "dungeon": ++this.props.dungeon
+    });
+  }
+
+  // win
+
   render() {
+    var objects = [];
+    for (var i = 0; i < this.state.objects.length; i++) {
+      objects.push(<SingleObject key={i} index={i} row={this.state.objects[i].position.row} col={this.state.objects[i].position.col} type={this.state.objects[i].type}/>);
+    }
 
     return (
       <div id="objects">
+        {objects}
+        <Hero health={this.props.health} weaporn={this.props.weaporn} level={this.props.level} xp={this.props.xp} checkNext={this.checkNext}/>
       </div>
     );
+  }
+}
+
+class SingleObject extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    var styleObject = {
+      "top": this.props.row * 12.5 + "px",
+      "left": this.props.col * 12.5 + "px"
+    };
+    return (<div id={"object-"+this.props.index} className={"object "+ this.props.type} style={styleObject}></div>);
+  }
+
+}
+
+class Hero extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { // TODO: place hero right
+      "position": {
+        "row": 1,
+        "col": 1
+      }
+    }
+  }
+
+  componentWillMount() {
+    document.addEventListener("keydown", this.handleKeyDown.bind(this));
+  }
+
+  componentWillUnMount() {
+    document.removeEventListener("keydown", this.handleKeyDown);
+  }
+
+  handleKeyDown(event) {
+
+    function equalPositions(a, b) { // simple comparation of position objects
+      for (var p in a) {
+        if (a[p] !== b[p]) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    var position = JSON.parse(JSON.stringify(this.state.position)); // deep copy
+    switch (event.key) {
+      case "ArrowUp":
+        position.row--;
+        break;
+      case "ArrowDown":
+        position.row++
+          break;
+      case "ArrowLeft":
+        position.col--
+          break;
+      case "ArrowRight":
+        position.col++
+          break;
+      default:
+        return;
+    }
+    var next = this.props.checkNext(position);
+    // switch(next){
+    // case "wall":
+    // return;
+    // case "enemy"
+    // fightEnemy(enemy);
+    // case "health"
+    // improve health
+    // case "weaporn"
+    // changeWeaporn
+    // default break;
+    // }
+    if (!equalPositions(position, this.state.position)) {
+      this.setState({
+        "position": position
+      });
+    }
+  }
+
+  render() {
+    var position = {
+      "top": this.state.position.row * 12.5,
+      "left": this.state.position.col * 12.5
+    };
+    return (<div id="hero" style={position}></div>);
   }
 }
 
