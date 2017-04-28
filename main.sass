@@ -3,13 +3,14 @@ $colorWall: #868485
 $colorDungeon: #faf7f3
 $colorFront: #d5d52c
 $colorHero: #31625b
-$colorEnemy: #c45565
+$colorEnemy: #c88501
 $colorBoss: #b92335
-$colorBonus: #fcd167
+$colorBonus: #7b9f20
+$colorWeaporn: #fa4964
 
 $width: 80
 $heigth: 80
-$boardWidth: 1000px
+$boardWidth: 960px
 $cellWidth: $boardWidth/$width
 
 body
@@ -37,10 +38,11 @@ body
     #board
       width: $boardWidth
       background-color: #fff
-      height: 400px
+      //height: 400px
+      height: $heigth*$cellWidth
       margin-top: 30px
       position: relative
-      overflow: hidden
+      //overflow: scroll
 
       #dungeon
         background-color: $colorWall
@@ -61,3 +63,33 @@ body
               background-color: $colorWall
             &.room
               background-color: $colorDungeon
+
+      #objects
+        position: absolute
+        top: 0
+        left: 0
+        width: $boardWidth
+        height: $heigth*$cellWidth
+
+        .object
+          position: absolute
+          width: $cellWidth
+          height: $cellWidth
+          border-radius: 50%
+          &.enemy
+            background-color: $colorEnemy
+          &.boss
+            background-color: $colorBoss
+            width: $cellWidth
+            height: $cellWidth
+          &.health
+            background-color: $colorBonus
+          &.weaporn
+            background-color: $colorWeaporn
+
+    #hero
+      position: absolute
+      width: $cellWidth
+      height: $cellWidth
+      border-radius: 50%
+      background-color: $colorHero

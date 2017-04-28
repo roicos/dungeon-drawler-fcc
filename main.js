@@ -574,6 +574,12 @@ class Objects extends React.Component {
       return boss;
     }
 
+    function createHero() {
+      var hero = {};
+      hero.type = "hero";
+      return hero;
+    }
+
     function createWeaporn(attack) {
       var weaporn = {};
       weaporn.type = "weaporn";
@@ -588,7 +594,8 @@ class Objects extends React.Component {
       return bonus;
     }
 
-    objects.push(createBoss());
+    objects.push(createBoss()); // always 0
+    objects.push(createHero()); // hero - always 1
     for (var i = 0; i < settings.enemies; i++) {
       objects.push(createEnemy());
     }
@@ -635,7 +642,7 @@ class Objects extends React.Component {
       var position = getFreePosition.call(this);
       objects[i].position = position;
     }
-    // console.log(objects);
+    //console.log(objects);
     return objects;
   }
 
@@ -750,6 +757,8 @@ class Objects extends React.Component {
           weaporn={this.props.weaporn}
           level={this.props.level}
           xp={this.props.xp}
+          row={this.state.objects[1].position.row}
+          col={this.state.objects[1].position.col}
           checkNext={this.checkNext}
           handleNext={this.handleNext}
         />
@@ -765,8 +774,8 @@ class SingleObject extends React.Component {
 
   render() {
     var styleObject = {
-      top: this.props.row * 12.5 + "px",
-      left: this.props.col * 12.5 + "px"
+      top: this.props.row * 12 + "px",
+      left: this.props.col * 12 + "px"
     };
     return (
       <div
@@ -785,8 +794,8 @@ class Hero extends React.Component {
     this.state = {
       // TODO: place hero right
       position: {
-        row: 1,
-        col: 1
+        row: this.props.row,
+        col: this.props.col
       }
     };
   }
@@ -840,8 +849,8 @@ class Hero extends React.Component {
 
   render() {
     var position = {
-      top: this.state.position.row * 12.5,
-      left: this.state.position.col * 12.5
+      top: this.state.position.row * 12,
+      left: this.state.position.col * 12
     };
     return <div id="hero" style={position} />;
   }
