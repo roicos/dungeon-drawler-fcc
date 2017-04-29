@@ -6,17 +6,16 @@ class Game extends React.Component {
       health: 100,
       weaporn: 1,
       level: 1,
-      xp: 100,
+      xp: 50,
       dungeon: 1
     };
 
     this.updateState = this.updateState.bind(this);
   }
 
-  updateState(name, value) {
-    this.setState({
-      name: value
-    });
+  updateState(object) {
+    // console.log(object);
+    this.setState(object);
   }
 
   render() {
@@ -568,7 +567,6 @@ class Objects extends React.Component {
       var boss = {};
       boss.type = "boss";
       boss.level = settings.bossLevel;
-      boss.damage = boss.level + 5;
       boss.health = boss.level * 100;
       boss.xp = 50;
       return boss;
@@ -676,38 +674,44 @@ class Objects extends React.Component {
     } else if (index == -1) {
       return true; // empty space, just go
     } else if (index >= 0) {
-      switch (objects[next].type) {
+      switch (this.state.objects[index].type) {
         case "enemy":
           var heroHealth =
-            this.props.health - this.state.objects[index].level + 5;
+            this.props.health - (this.state.objects[index].level + 5);
           var enemyHealth =
             this.state.objects[index].health -
             (this.props.level + 5) * this.props.weaporn;
           var xp = this.props.xp;
           var level = this.props.level;
           // var dungeon = this.props.dungeon;
-          if (heroHealth == 0) {
+          if (heroHealth <= 0) {
             alert("You are died!");
             // TODO: reset game
           }
-          if (enemyHealth == 0) {
+          console.log(enemyHealth);
+          if (enemyHealth <= 0) {
             // enemy is killed
             // if(index == 0){ // boss
-            // if(heroHealth == 0){
+            // if(heroHealth <= 0){
             // alert ("You died as a Hero!"); // make reincarnation?
             // }
             // dungeon++;
             // xp?, level ?
             //}
-            deleteObject(index);
-            xp -= -this.state.objects[index].xp;
-            if (xp == 0) {
+            xp -= this.state.objects[index].xp;
+            if (xp <= 0) {
               level++;
               xp = level * 10 + 50;
             }
-            this.updateState({ health: heroHealth, xp: xp, level: level });
+            this.props.updateState({
+              health: heroHealth,
+              xp: xp,
+              level: level
+            });
+            this.deleteObject(index);
             return true;
           } else {
+            this.props.updateState({ health: heroHealth });
             var objects = this.state.objects;
             objects[index].health = enemyHealth;
             this.setState({ objects: objects });
@@ -716,19 +720,19 @@ class Objects extends React.Component {
         case "health":
           var health = this.props.health;
           health += this.state.objects[index].heal;
-          this.updateState({
+          this.props.updateState({
             health: health
           });
-          deleteObject(index);
+          this.deleteObject(index);
           return true;
         case "weaporn":
           if (this.props.weaporn < this.state.objects[index].attack) {
-            this.updateState({
+            this.props.updateState({
               weaporn: this.state.objects[index].attack
             });
-            deleteObject(index);
-            return true;
           }
+          this.deleteObject(index);
+          return true;
       }
     }
   }
