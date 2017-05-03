@@ -24,6 +24,7 @@ body
     h1
       width: 500px
       margin: 30px auto
+
     #characteristics
       list-style: none
       font-family: Geneva, Arial, Helvetica, sans-serif
@@ -35,61 +36,103 @@ body
     .clear
       clear: both
 
-    #board
-      width: $boardWidth
-      background-color: #fff
-      //height: 400px
-      height: $heigth*$cellWidth
-      margin-top: 30px
+    #board-wrapper
       position: relative
-      //overflow: scroll
+      height: $cellWidth*30
+      overflow: hidden
+      margin-top: 30px
 
-      #dungeon
-        background-color: $colorWall
-        width: $boardWidth
-        height: $heigth*$cellWidth
-
-        table
-          border-collapse:collapse
-          border-spacing: 0
-          border-width: 0
-
-          td
-            width: $cellWidth
-            height: $cellWidth
-            padding: 0
-            border-collapse:collapse
-            &.wall
-              background-color: $colorWall
-            &.room
-              background-color: $colorDungeon
-
-      #objects
+      #darkness
         position: absolute
+        height: $cellWidth*30
         top: 0
         left: 0
         width: $boardWidth
-        height: $heigth*$cellWidth
 
-        .object
+        #action-area
           position: absolute
-          width: $cellWidth
-          height: $cellWidth
-          border-radius: 50%
-          &.enemy
-            background-color: $colorEnemy
-          &.boss
-            background-color: $colorBoss
+          width: $cellWidth*11
+          height: $cellWidth*11
+
+        .dark
+          background-color: $colorApp
+          position: absolute
+
+        #dark-up
+          top: 0
+          left: 0
+          width: $boardWidth
+          height: $cellWidth*10
+
+        #dark-down
+          bottom: 0
+          left: 0
+          width: $boardWidth
+          height: $cellWidth*9
+
+        #dark-left
+          top: 0
+          left: 0
+          height: $cellWidth*30
+
+        #dark-right
+          top: 0
+          right: 0
+          height: $cellWidth*30
+
+      #board
+        width: $boardWidth
+        background-color: #fff
+        height: $heigth*$cellWidth
+        margin-top: 0
+        position: absolute
+
+        #dungeon
+          background-color: $colorWall
+          width: $boardWidth
+          height: $heigth*$cellWidth
+
+          table
+            border-collapse:collapse
+            border-spacing: 0
+            border-width: 0
+
+            td
+              width: $cellWidth
+              height: $cellWidth
+              padding: 0
+              border-collapse:collapse
+              &.wall
+                background-color: $colorWall
+              &.room
+                background-color: $colorDungeon
+
+        #objects
+          position: absolute
+          top: 0
+          left: 0
+          width: $boardWidth
+          height: $heigth*$cellWidth
+
+          .object
+            position: absolute
             width: $cellWidth
             height: $cellWidth
-          &.health
-            background-color: $colorBonus
-          &.weaporn
-            background-color: $colorWeaporn
+            border-radius: 50%
+            &.enemy
+              background-color: $colorEnemy
+            &.boss
+              background-color: $colorBoss
+              width: $cellWidth
+              height: $cellWidth
+            &.health
+              background-color: $colorBonus
+            &.weaporn
+              background-color: $colorWeaporn
 
-    #hero
-      position: absolute
-      width: $cellWidth
-      height: $cellWidth
-      border-radius: 50%
-      background-color: $colorHero
+      #hero
+        position: absolute
+        width: $cellWidth
+        height: $cellWidth
+        border-radius: 50%
+        background-color: $colorHero

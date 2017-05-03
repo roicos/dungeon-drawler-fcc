@@ -7,7 +7,8 @@ class Game extends React.Component {
       weaporn: 1,
       level: 1,
       xp: 50,
-      dungeon: 1
+      dungeon: 1,
+      position: { row: 0, col: 0 }
     };
 
     this.updateState = this.updateState.bind(this);
@@ -28,14 +29,17 @@ class Game extends React.Component {
           xp={this.state.xp}
           dungeon={this.state.dungeon}
         />
-        <Board
-          health={this.state.health}
-          weaporn={this.state.weaporn}
-          level={this.state.level}
-          xp={this.state.xp}
-          dungeon={this.state.dungeon}
-          updateState={this.updateState}
-        />
+        <div id="board-wrapper">
+          <Board
+            health={this.state.health}
+            weaporn={this.state.weaporn}
+            level={this.state.level}
+            xp={this.state.xp}
+            dungeon={this.state.dungeon}
+            updateState={this.updateState}
+          />
+          <Darkness heroPosition={this.state.position} />
+        </div>
       </div>
     );
   }
@@ -143,8 +147,15 @@ class Board extends React.Component {
     super(props);
 
     this.state = {
-      dungeon: this.createDungeon(80, 80, 40) // 80, 80, 40
+      dungeon: this.createDungeon(80, 80, 40), // 80, 80, 40
+      top: 0
     };
+
+    this.setTop = this.setTop.bind(this);
+  }
+
+  setTop(top) {
+    this.setState({ top: top });
   }
 
   createDungeon(width, height, roomsNum) {
@@ -465,10 +476,15 @@ class Board extends React.Component {
   }
 
   render() {
+    var styleObject = {
+      top: this.state.top * 12 + "px",
+      left: 0
+    };
+
     return (
-      // board - static dungeon board, dungeon - dungeon level
+      // dungeon - dungeon level
       (
-        <div id="board">
+        <div id="board" style={styleObject}>
           <Dungeon data={this.state.dungeon} />
           <Objects
             health={this.props.health}
@@ -478,6 +494,7 @@ class Board extends React.Component {
             board={this.state.dungeon}
             dungeon={this.props.dungeon}
             updateState={this.props.updateState}
+            setBoardTop={this.setTop}
           />
         </div>
       )
@@ -537,6 +554,11 @@ class Objects extends React.Component {
     this.placeObjects = this.placeObjects.bind(this);
     this.checkNext = this.checkNext.bind(this);
     this.handleNext = this.handleNext.bind(this);
+  }
+
+  componentWillMount() {
+    this.props.setBoardTop(-this.state.objects[1].position.row + 15);
+    this.props.updateState({ position: this.state.objects[1].position });
   }
 
   createObjects(dungeon) {
@@ -796,7 +818,6 @@ class Hero extends React.Component {
     super(props);
 
     this.state = {
-      // TODO: place hero right
       position: {
         row: this.props.row,
         col: this.props.col
@@ -857,6 +878,41 @@ class Hero extends React.Component {
       left: this.state.position.col * 12
     };
     return <div id="hero" style={position} />;
+  }
+}
+
+class Darkness extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    var actionAreaPosition = {
+      top: 10 * 12,
+      left: (this.props.heroPosition.col - 5) * 12
+    };
+
+    var styleLeft = {
+      width: this.props.heroPosition.col >= 5
+        ? (this.props.heroPosition.col - 5) * 12
+        : 0
+    };
+
+    var styleRight = {
+      width: this.props.heroPosition.col <= 74
+        ? (74 - this.props.heroPosition.col) * 12
+        : 0
+    };
+
+    return (
+      <div id="darkness">
+        <div id="action-area" style={actionAreaPosition} />
+        <div id="dark-up" className="dark" />
+        <div id="dark-left" className="dark" style={styleLeft} />
+        <div id="dark-right" className="dark" style={styleRight} />
+        <div id="dark-down" className="dark" />
+      </div>
+    );
   }
 }
 
