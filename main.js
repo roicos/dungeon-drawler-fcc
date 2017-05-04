@@ -15,7 +15,6 @@ class Game extends React.Component {
   }
 
   updateState(object) {
-    // console.log(object);
     this.setState(object);
   }
 
@@ -35,6 +34,7 @@ class Game extends React.Component {
             weaporn={this.state.weaporn}
             level={this.state.level}
             xp={this.state.xp}
+            heroPosition={this.state.position}
             dungeon={this.state.dungeon}
             updateState={this.updateState}
           />
@@ -695,7 +695,7 @@ class Objects extends React.Component {
       return false; // wall
     } else if (index == -1) {
       return true; // empty space, just go
-    } else if (index >= 0) {
+    } else if (index >= 0 && index != 1) {
       switch (this.state.objects[index].type) {
         case "enemy":
           var heroHealth =
@@ -710,7 +710,6 @@ class Objects extends React.Component {
             alert("You are died!");
             // TODO: reset game
           }
-          console.log(enemyHealth);
           if (enemyHealth <= 0) {
             // enemy is killed
             // if(index == 0){ // boss
@@ -756,6 +755,8 @@ class Objects extends React.Component {
           this.deleteObject(index);
           return true;
       }
+    } else {
+      return true;
     }
   }
 
@@ -787,6 +788,8 @@ class Objects extends React.Component {
           col={this.state.objects[1].position.col}
           checkNext={this.checkNext}
           handleNext={this.handleNext}
+          setBoardTop={this.props.setBoardTop}
+          updateState={this.props.updateState}
         />
       </div>
     );
@@ -865,6 +868,12 @@ class Hero extends React.Component {
     if (!equalPositions(position, this.state.position)) {
       var index = this.props.checkNext(position);
       if (this.props.handleNext(index)) {
+        // TODO: move Darkness (if left or right) or board (up or down in opposite)
+        if (this.state.position.row != position.row) {
+          // up or down
+          this.props.setBoardTop(-position.row + 15);
+        }
+        this.props.updateState({ position: position });
         this.setState({
           position: position
         });
