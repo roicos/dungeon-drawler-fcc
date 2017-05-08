@@ -161,7 +161,7 @@ class Board extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.props.dungeon != nextProps.dungeon || this.props.reset) {
+    if (this.props.dungeon != nextProps.dungeon || nextProps.reset) {
       var newDungeon = this.createDungeon(80, 80, 40); // width, heigth, number of rooms
       this.setState({ dungeon: newDungeon });
     }
@@ -522,7 +522,6 @@ class Dungeon extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    // only if dungeon level changes
     return this.props.dungeon != nextProps.dungeon || nextProps.reset;
   }
 
@@ -602,35 +601,35 @@ class Objects extends React.Component {
         settings.healthBonuses = 25;
         settings.weaporn = [2, 2, 2, 3, 3, 3, 4, 4];
         settings.enemyLevelMax = 10;
-        settings.bossLevel = 1; //15
+        settings.bossLevel = 10;
         break;
       case 2:
         settings.enemies = 20;
         settings.healthBonuses = 25;
         settings.weaporn = [3, 3, 4, 4, 5, 5, 5];
         settings.enemyLevelMax = 13;
-        settings.bossLevel = 1; //20
+        settings.bossLevel = 13;
         break;
       case 3:
         settings.enemies = 25;
         settings.healthBonuses = 25;
         settings.weaporn = [5, 5, 6, 6, 6, 7, 7, 7];
         settings.enemyLevelMax = 15;
-        settings.bossLevel = 1; //25
+        settings.bossLevel = 15;
         break;
       case 4:
         settings.enemies = 25;
         settings.healthBonuses = 25;
         settings.weaporn = [7, 7, 7, 8, 8, 8];
         settings.enemyLevelMax = 18;
-        settings.bossLevel = 1; //30
+        settings.bossLevel = 18;
         break;
       case 5:
         settings.enemies = 30;
         settings.healthBonuses = 25;
         settings.weaporn = [8, 8, 8];
         settings.enemyLevelMax = 20;
-        settings.bossLevel = 1; //35
+        settings.bossLevel = 20;
         break;
     }
 
@@ -747,19 +746,15 @@ class Objects extends React.Component {
   }
 
   resetGame() {
-    console.log("reset");
     this.props.updateState({
       health: 100,
       weaporn: 1,
       level: 1,
       xp: 50,
       dungeon: 1
-      //"reset" : true
     });
-    console.log("reset true");
-    this.props.updateState({ reset: false });
-    console.log("reset false");
-    //this.props.updateState({"reset" : false});
+
+    this.props.updateState({ reset: true });
   }
 
   handleNext(index) {
@@ -803,6 +798,7 @@ class Objects extends React.Component {
             }
             this.deleteObject(index);
             if (dungeon > 5) {
+              alert("Congratulations! You win!!!");
               this.resetGame();
             } else {
               this.props.updateState({
@@ -934,8 +930,16 @@ class Hero extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (this.props.dungeon != nextProps.dungeon || nextProps.reset) {
       var position = { row: nextProps.row, col: nextProps.col };
+      if (this.props.reset) {
+        this.props.updateState({ reset: false });
+      }
       this.setState({ newPosition: position });
     }
+  }
+
+  shouldComponentUpdate(nextProps) {
+    // don't rerender hero before reset ends
+    return !nextProps.reset;
   }
 
   handleKeyDown(event) {
@@ -969,15 +973,14 @@ class Hero extends React.Component {
 
     if (!equalPositions(position, this.state.position)) {
       var index = this.props.checkNext(position);
-      if (this.props.handleNext(index) || this.props.reset) {
-        if (this.state.position.row != position.row) {
-          // up or down
-          this.props.setBoardTop(-position.row + 15);
-        }
+      if (this.props.handleNext(index) || this.state.newPosition != undefined) {
         if (this.state.newPosition != undefined) {
-          // dungeon changed, we must set new generated position
+          // dungeon changed, we must set newly generated position
           position = this.state.newPosition;
           this.setState({ newPosition: undefined });
+        } else if (this.state.position.row != position.row) {
+          // just go up or down
+          this.props.setBoardTop(-position.row + 15);
         }
         this.props.updateState({ position: position });
         this.setState({
