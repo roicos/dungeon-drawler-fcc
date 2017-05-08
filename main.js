@@ -8,7 +8,8 @@ class Game extends React.Component {
       level: 1,
       xp: 50,
       dungeon: 1,
-      position: { row: 0, col: 0 }
+      position: { row: 0, col: 0 },
+      reset: false
     };
 
     this.updateState = this.updateState.bind(this);
@@ -36,6 +37,7 @@ class Game extends React.Component {
             xp={this.state.xp}
             heroPosition={this.state.position}
             dungeon={this.state.dungeon}
+            reset={this.state.reset}
             updateState={this.updateState}
           />
           <Darkness heroPosition={this.state.position} />
@@ -147,7 +149,7 @@ class Board extends React.Component {
     super(props);
 
     this.state = {
-      dungeon: this.createDungeon(80, 80, 40), // 80, 80, 40
+      dungeon: this.createDungeon(80, 80, 40), // width, heigth, number of rooms
       top: 0
     };
 
@@ -156,6 +158,13 @@ class Board extends React.Component {
 
   setTop(top) {
     this.setState({ top: top });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.dungeon != nextProps.dungeon || this.props.reset) {
+      var newDungeon = this.createDungeon(80, 80, 40); // width, heigth, number of rooms
+      this.setState({ dungeon: newDungeon });
+    }
   }
 
   createDungeon(width, height, roomsNum) {
@@ -485,7 +494,11 @@ class Board extends React.Component {
       // dungeon - dungeon level
       (
         <div id="board" style={styleObject}>
-          <Dungeon data={this.state.dungeon} />
+          <Dungeon
+            dungeon={this.props.dungeon}
+            data={this.state.dungeon}
+            reset={this.props.reset}
+          />
           <Objects
             health={this.props.health}
             weaporn={this.props.weaporn}
@@ -493,6 +506,7 @@ class Board extends React.Component {
             xp={this.props.xp}
             board={this.state.dungeon}
             dungeon={this.props.dungeon}
+            reset={this.props.reset}
             updateState={this.props.updateState}
             setBoardTop={this.setTop}
           />
@@ -507,8 +521,9 @@ class Dungeon extends React.Component {
     super(props);
   }
 
-  shouldComponentUpdate() {
-    return false;
+  shouldComponentUpdate(nextProps, nextState) {
+    // only if dungeon level changes
+    return this.props.dungeon != nextProps.dungeon || nextProps.reset;
   }
 
   render() {
@@ -543,12 +558,15 @@ class Tr extends React.Component {
 }
 
 class Objects extends React.Component {
-  // all objects and game setting
+  // all objects and game action
   constructor(props) {
     super(props);
 
     this.state = {
-      objects: this.placeObjects(this.createObjects(this.props.dungeon))
+      objects: this.placeObjects(
+        this.createObjects(this.props.dungeon),
+        this.props.board
+      )
     };
 
     this.placeObjects = this.placeObjects.bind(this);
@@ -559,6 +577,18 @@ class Objects extends React.Component {
   componentWillMount() {
     this.props.setBoardTop(-this.state.objects[1].position.row + 15);
     this.props.updateState({ position: this.state.objects[1].position });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.dungeon != nextProps.dungeon || nextProps.reset) {
+      var newObjects = this.placeObjects(
+        this.createObjects(nextProps.dungeon),
+        nextProps.board
+      );
+      this.setState({ objects: newObjects });
+      this.props.setBoardTop(-newObjects[1].position.row + 15);
+      this.props.updateState({ position: newObjects[1].position });
+    }
   }
 
   createObjects(dungeon) {
@@ -572,7 +602,35 @@ class Objects extends React.Component {
         settings.healthBonuses = 25;
         settings.weaporn = [2, 2, 2, 3, 3, 3, 4, 4];
         settings.enemyLevelMax = 10;
-        settings.bossLevel = 20;
+        settings.bossLevel = 1; //15
+        break;
+      case 2:
+        settings.enemies = 20;
+        settings.healthBonuses = 25;
+        settings.weaporn = [3, 3, 4, 4, 5, 5, 5];
+        settings.enemyLevelMax = 13;
+        settings.bossLevel = 1; //20
+        break;
+      case 3:
+        settings.enemies = 25;
+        settings.healthBonuses = 25;
+        settings.weaporn = [5, 5, 6, 6, 6, 7, 7, 7];
+        settings.enemyLevelMax = 15;
+        settings.bossLevel = 1; //25
+        break;
+      case 4:
+        settings.enemies = 25;
+        settings.healthBonuses = 25;
+        settings.weaporn = [7, 7, 7, 8, 8, 8];
+        settings.enemyLevelMax = 18;
+        settings.bossLevel = 1; //30
+        break;
+      case 5:
+        settings.enemies = 30;
+        settings.healthBonuses = 25;
+        settings.weaporn = [8, 8, 8];
+        settings.enemyLevelMax = 20;
+        settings.bossLevel = 1; //35
         break;
     }
 
@@ -629,7 +687,7 @@ class Objects extends React.Component {
     return objects;
   }
 
-  placeObjects(objects) {
+  placeObjects(objects, board) {
     function isOccupied(row, col) {
       for (var i = 0; i < objects.length; i++) {
         if (
@@ -643,14 +701,14 @@ class Objects extends React.Component {
       return false;
     }
 
-    function getFreePosition() {
+    function getFreePosition(board) {
       var check = false;
       var row;
       var col;
       while (!check) {
-        row = Math.floor(Math.random() * this.props.board.length);
-        col = Math.floor(Math.random() * this.props.board[0].length);
-        check = this.props.board[row][col] && !isOccupied(row, col);
+        row = Math.floor(Math.random() * board.length);
+        col = Math.floor(Math.random() * board[0].length);
+        check = board[row][col] && !isOccupied(row, col);
       }
       return {
         row: row,
@@ -659,10 +717,9 @@ class Objects extends React.Component {
     }
 
     for (var i = 0; i < objects.length; i++) {
-      var position = getFreePosition.call(this);
+      var position = getFreePosition(board);
       objects[i].position = position;
     }
-    //console.log(objects);
     return objects;
   }
 
@@ -689,6 +746,22 @@ class Objects extends React.Component {
     this.setState({ objects: objects });
   }
 
+  resetGame() {
+    console.log("reset");
+    this.props.updateState({
+      health: 100,
+      weaporn: 1,
+      level: 1,
+      xp: 50,
+      dungeon: 1
+      //"reset" : true
+    });
+    console.log("reset true");
+    this.props.updateState({ reset: false });
+    console.log("reset false");
+    //this.props.updateState({"reset" : false});
+  }
+
   handleNext(index) {
     // return go next
     if (index == -2) {
@@ -696,7 +769,8 @@ class Objects extends React.Component {
     } else if (index == -1) {
       return true; // empty space, just go
     } else if (index >= 0 && index != 1) {
-      switch (this.state.objects[index].type) {
+      var type = index == 0 ? "enemy" : this.state.objects[index].type;
+      switch (type) {
         case "enemy":
           var heroHealth =
             this.props.health - (this.state.objects[index].level + 5);
@@ -705,31 +779,39 @@ class Objects extends React.Component {
             (this.props.level + 5) * this.props.weaporn;
           var xp = this.props.xp;
           var level = this.props.level;
-          // var dungeon = this.props.dungeon;
+          var dungeon = this.props.dungeon;
           if (heroHealth <= 0) {
             alert("You are died!");
-            // TODO: reset game
+            this.resetGame();
+            return false;
           }
           if (enemyHealth <= 0) {
             // enemy is killed
-            // if(index == 0){ // boss
-            // if(heroHealth <= 0){
-            // alert ("You died as a Hero!"); // make reincarnation?
-            // }
-            // dungeon++;
-            // xp?, level ?
-            //}
+            if (index == 0) {
+              // boss
+              if (heroHealth <= 0) {
+                alert("You died as a Hero!");
+                this.resetGame();
+                return true;
+              }
+              dungeon++;
+            }
             xp -= this.state.objects[index].xp;
             if (xp <= 0) {
               level++;
               xp = level * 10 + 50;
             }
-            this.props.updateState({
-              health: heroHealth,
-              xp: xp,
-              level: level
-            });
             this.deleteObject(index);
+            if (dungeon > 5) {
+              this.resetGame();
+            } else {
+              this.props.updateState({
+                health: heroHealth,
+                xp: xp,
+                level: level,
+                dungeon: dungeon
+              });
+            }
             return true;
           } else {
             this.props.updateState({ health: heroHealth });
@@ -764,7 +846,17 @@ class Objects extends React.Component {
 
   render() {
     var objects = [];
-    for (var i = 0; i < this.state.objects.length; i++) {
+    objects.push(
+      <SingleObject // boss
+        key={0}
+        index={0}
+        row={this.state.objects[0].position.row}
+        col={this.state.objects[0].position.col}
+        type={this.state.objects[0].type}
+      />
+    );
+    for (var i = 2; i < this.state.objects.length; i++) {
+      // weaporn, health, enemies
       objects.push(
         <SingleObject
           key={i}
@@ -784,8 +876,10 @@ class Objects extends React.Component {
           weaporn={this.props.weaporn}
           level={this.props.level}
           xp={this.props.xp}
+          dungeon={this.props.dungeon}
           row={this.state.objects[1].position.row}
           col={this.state.objects[1].position.col}
+          reset={this.props.reset}
           checkNext={this.checkNext}
           handleNext={this.handleNext}
           setBoardTop={this.props.setBoardTop}
@@ -824,7 +918,8 @@ class Hero extends React.Component {
       position: {
         row: this.props.row,
         col: this.props.col
-      }
+      },
+      newPosition: undefined
     };
   }
 
@@ -834,6 +929,13 @@ class Hero extends React.Component {
 
   componentWillUnMount() {
     document.removeEventListener("keydown", this.handleKeyDown);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.dungeon != nextProps.dungeon || nextProps.reset) {
+      var position = { row: nextProps.row, col: nextProps.col };
+      this.setState({ newPosition: position });
+    }
   }
 
   handleKeyDown(event) {
@@ -867,11 +969,15 @@ class Hero extends React.Component {
 
     if (!equalPositions(position, this.state.position)) {
       var index = this.props.checkNext(position);
-      if (this.props.handleNext(index)) {
-        // TODO: move Darkness (if left or right) or board (up or down in opposite)
+      if (this.props.handleNext(index) || this.props.reset) {
         if (this.state.position.row != position.row) {
           // up or down
           this.props.setBoardTop(-position.row + 15);
+        }
+        if (this.state.newPosition != undefined) {
+          // dungeon changed, we must set new generated position
+          position = this.state.newPosition;
+          this.setState({ newPosition: undefined });
         }
         this.props.updateState({ position: position });
         this.setState({
